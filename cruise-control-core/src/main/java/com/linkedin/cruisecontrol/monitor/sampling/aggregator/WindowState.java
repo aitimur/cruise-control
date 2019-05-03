@@ -6,10 +6,10 @@ package com.linkedin.cruisecontrol.monitor.sampling.aggregator;
 
 import com.linkedin.cruisecontrol.common.LongGenerationed;
 import com.linkedin.cruisecontrol.model.Entity;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 import static com.linkedin.cruisecontrol.monitor.sampling.aggregator.AggregationOptions.Granularity.ENTITY_GROUP;
 
@@ -18,6 +18,8 @@ import static com.linkedin.cruisecontrol.monitor.sampling.aggregator.Aggregation
  * A class that helps maintain the information of a window.
  */
 public class WindowState<G, E extends Entity<G>> extends LongGenerationed {
+  private static final Logger LOG = LoggerFactory.getLogger(WindowState.class);
+
   private final Set<E> _validEntities;
   private final Set<E> _extrapolatedEntities;
 
@@ -113,6 +115,7 @@ public class WindowState<G, E extends Entity<G>> extends LongGenerationed {
         invalidGroupsForOption.add(entity.group());
       }
     }
+
     // The valid entities at group granularity is the total number of valid entities excluding those belonging
     // to an invalid group (a group containing invalid entities).
     int validEntitiesWithGroupGranularity = validEntitiesForOption.size();
@@ -124,6 +127,25 @@ public class WindowState<G, E extends Entity<G>> extends LongGenerationed {
     }
     validGroupsForOption.addAll(numValidEntitiesByGroupForOption.keySet());
     int totalNumEntities = options.interestedEntities().size();
+
+    // Klarna addition.
+    // Added to try to identify any partiticular partitions that never become "Valid"
+    if( LOG.isDebugEnabled()){
+      TreeSet<Entity> sortedEntities = new TreeSet<Entity>(new Comparator<Entity>() {
+        @Override
+        public int compare(Entity o1, Entity o2) {
+          return o1.toString().compareTo(o2.toString());
+        }
+      });
+      sortedEntities.addAll(validEntitiesForOption);
+      LOG.debug("---- Printing valid entities:");
+      LOG.debug(sortedEntities.toString());
+      sortedEntities.clear();
+      sortedEntities.addAll(options.interestedEntities());
+      LOG.debug("---- Printing interested entities");
+      LOG.debug(sortedEntities.toString());
+    }
+
     completeness.addValidEntityRatio(windowIndex, (float) validEntitiesForOption.size() / totalNumEntities);
     completeness.addValidEntityRatioWithGroupGranularity(windowIndex, (float) validEntitiesWithGroupGranularity / totalNumEntities);
     completeness.addExtrapolationEntityRatio(windowIndex, (float) numExtrapolatedEntitiesForWindow / totalNumEntities);
