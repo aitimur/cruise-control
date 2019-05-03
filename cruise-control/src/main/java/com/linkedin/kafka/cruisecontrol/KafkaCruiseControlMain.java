@@ -121,6 +121,7 @@ public class KafkaCruiseControlMain {
     server.start();
     boolean corsEnabled = config.getBoolean(KafkaCruiseControlConfig.WEBSERVER_HTTP_CORS_ENABLED_CONFIG);
     System.out.println(">> ********************************************* <<");
+    System.out.println(">> The AWESOME DEMO BUILD ====================== <<");
     System.out.println(">> Application directory            : " + System.getProperty("user.dir"));
     System.out.println(">> REST API available on            : " + apiUrlPrefix);
     System.out.println(">> Web UI available on              : " + webuiPathPrefix);
